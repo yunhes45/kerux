@@ -1,6 +1,7 @@
 package ws
 
 import (
+	"context"
 	"log"
 	"net/http"
 
@@ -13,19 +14,24 @@ func Handler(hub *Hub) http.HandlerFunc {
 
 		if err != nil {
 			log.Printf("accept: %v", err)
-
 			return
 		}
 		defer conn.CloseNow()
-		hub.Add(conn)
-		defer hub.Remove(conn)
+		client := NewClient(conn)
+		ctx, cancel := context.WithCancel(r.Context())
+		defer cancel()
+
+		hub.Add(client)
+		defer hub.Remove(client)
+
+		go client.WritePump(ctx)
 
 		for {
-			typ, data, err := conn.Read(r.Context())
+			typ, data, err := conn.Read(ctx)
 			if err != nil {
 				return
 			}
-			hub.Broadcast(typ, data)
+			hub.Broadcast(Message{Type: typ, Data: data})
 		}
 	}
 }

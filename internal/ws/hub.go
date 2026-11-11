@@ -1,47 +1,47 @@
 package ws
 
 import (
-	"context"
 	"sync"
-	"time"
 
 	"github.com/coder/websocket"
 )
 
+type Message struct {
+	Type websocket.MessageType
+	Data []byte
+}
 type Hub struct {
-	mu    sync.Mutex
-	conns map[*websocket.Conn]struct{}
+	mu      sync.Mutex
+	clients map[*Client]struct{}
 }
 
 func NewHub() *Hub {
-	return &Hub{conns: make(map[*websocket.Conn]struct{})}
+	return &Hub{clients: make(map[*Client]struct{})}
 }
 
-func (h *Hub) Add(c *websocket.Conn) {
+func (h *Hub) Add(c *Client) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	h.conns[c] = struct{}{}
+	h.clients[c] = struct{}{}
 }
 
-func (h *Hub) Remove(c *websocket.Conn) {
+func (h *Hub) Remove(c *Client) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	delete(h.conns, c)
+	delete(h.clients, c)
 }
 
-func (h *Hub) Broadcast(typ websocket.MessageType, data []byte) {
+func (h *Hub) Broadcast(msg Message) {
 	h.mu.Lock()
-	targets := make([]*websocket.Conn, 0, len(h.conns))
-	for c := range h.conns {
+	targets := make([]*Client, 0, len(h.clients))
+	for c := range h.clients {
 		targets = append(targets, c)
 	}
 	h.mu.Unlock()
 
 	for _, c := range targets {
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-
-		_ = c.Write(ctx, typ, data)
-
-		cancel()
+		if !c.TrySend(msg) {
+			c.Close()
+		}
 	}
 }
