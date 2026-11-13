@@ -2,6 +2,7 @@ package ws
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 
@@ -27,11 +28,24 @@ func Handler(hub *Hub) http.HandlerFunc {
 		go client.WritePump(ctx)
 
 		for {
-			typ, data, err := conn.Read(ctx)
+			_, data, err := conn.Read(ctx)
 			if err != nil {
 				return
 			}
-			hub.Broadcast(Message{Type: typ, Data: data})
+
+			var env Envelope
+
+			if err := json.Unmarshal(data, &env); err != nil {
+				continue
+			}
+
+			if env.Type != "chat" || env.Text == "" {
+				continue
+			}
+
+			out, _ := json.Marshal(env)
+
+			hub.Broadcast(Message{Type: websocket.MessageText, Data: out})
 		}
 	}
 }
