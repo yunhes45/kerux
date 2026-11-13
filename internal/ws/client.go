@@ -2,6 +2,7 @@ package ws
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/coder/websocket"
@@ -10,6 +11,9 @@ import (
 const (
 	sendQueueSize = 16
 	writeTimeout  = 5 * time.Second
+
+	pingInterval = 30 * time.Second
+	pingTimeout  = 10 * time.Second
 )
 
 type Client struct {
@@ -38,10 +42,24 @@ func (c *Client) Close() {
 }
 
 func (c *Client) WritePump(ctx context.Context) {
+	ticker := time.NewTicker(pingInterval)
+
+	defer ticker.Stop()
+
 	for {
 		select {
 		case <-ctx.Done():
 			return
+		case <-ticker.C:
+			pctx, cancel := context.WithTimeout(ctx, pingTimeout)
+			err := c.conn.Ping(pctx)
+			cancel()
+			if err != nil {
+				log.Printf("ping failed: %v", err)
+				c.Close()
+
+				return
+			}
 		case msg := <-c.send:
 			wctx, cancel := context.WithTimeout(ctx, writeTimeout)
 			err := c.conn.Write(wctx, msg.Type, msg.Data)
