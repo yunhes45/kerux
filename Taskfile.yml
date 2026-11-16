@@ -1,0 +1,14 @@
+version: "3"
+
+dotenv: [".env"]
+
+tasks:
+  run:
+    cmds:
+      - go run ./cmd/kerux
+  migrate:
+    cmds:
+      - goose -dir migration postgres "$DATABASE_URL" up
+  sqlc:
+    cmds:
+      - sqlc generate
