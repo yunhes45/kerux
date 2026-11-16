@@ -2,15 +2,18 @@ package main
 
 import (
 	"log"
-	"net/http"
+
+	"github.com/yunhes45/kerux/internal/config"
+	"github.com/yunhes45/kerux/internal/server"
 )
 
 func main() {
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
-		_, _ = w.Write([]byte("ok"))
-	})
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	log.Printf("kerux listening on: 8081")
-	log.Fatal(http.ListenAndServe(":8081", mux))
+	if err := server.Run(cfg); err != nil {
+		log.Fatal(err)
+	}
 }
