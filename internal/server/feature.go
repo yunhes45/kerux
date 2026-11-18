@@ -10,6 +10,9 @@ import (
 )
 
 func mountFeatures(mux *http.ServeMux, pool *pgxpool.Pool) {
+	roomRepo := repository.NewRoomRepo(pool)
+
 	handler.RegisterHealth(mux)
-	handler.RegisterRooms(mux, repository.NewRooms(pool))
+	handler.RegisterRooms(mux, roomRepo)
+	handler.RegisterRoomList(mux, roomRepo)
 }

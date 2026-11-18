@@ -11,15 +11,15 @@ import (
 	"github.com/yunhes45/kerux/internal/service"
 )
 
-type Rooms struct {
+type RoomRepo struct {
 	pool *pgxpool.Pool
 }
 
-func NewRooms(pool *pgxpool.Pool) *Rooms {
-	return &Rooms{pool: pool}
+func NewRoomRepo(pool *pgxpool.Pool) *RoomRepo {
+	return &RoomRepo{pool: pool}
 }
 
-func (r *Rooms) InTx(ctx context.Context, fn func(tx service.RoomTx) error) error {
+func (r *RoomRepo) InTx(ctx context.Context, fn func(tx service.RoomTx) error) error {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return err

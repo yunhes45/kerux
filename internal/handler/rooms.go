@@ -5,13 +5,12 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/yunhes45/kerux/internal/service"
 )
 
 type createRoomRequest struct {
-	MemberID int64 `json:"member_id"`
+	PeerID int64 `json:"peer_id"`
 }
 
 type createRoomResponse struct {
@@ -24,9 +23,9 @@ func RegisterRooms(mux *http.ServeMux, store service.RoomStore) {
 
 func createRoom(store service.RoomStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		me, err := strconv.ParseInt(r.URL.Query().Get("member"), 10, 64)
+		me, err := currentMember(r)
 		if err != nil {
-			http.Error(w, "member 쿼리 필요", http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -36,7 +35,7 @@ func createRoom(store service.RoomStore) http.HandlerFunc {
 			return
 		}
 
-		opened, err := service.OpenDirect(r.Context(), store, me, req.MemberID)
+		opened, err := service.OpenDirect(r.Context(), store, me, req.PeerID)
 		if errors.Is(err, service.ErrInvalidRequest) {
 			http.Error(w, "잘못된 요청", http.StatusBadRequest)
 			return
