@@ -9,7 +9,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/yunhes45/kerux/internal/config"
-	"github.com/yunhes45/kerux/internal/handler"
 )
 
 func Run(cfg config.Config) error {
@@ -27,7 +26,7 @@ func Run(cfg config.Config) error {
 	log.Printf("db connected")
 
 	mux := http.NewServeMux()
-	handler.RegisterHealth(mux)
+	mountFeatures(mux, pool)
 
 	log.Printf("kerux listening on %s", cfg.Addr)
 
