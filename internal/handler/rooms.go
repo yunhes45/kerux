@@ -18,7 +18,7 @@ type createRoomResponse struct {
 }
 
 func RegisterRooms(mux *http.ServeMux, store service.RoomStore) {
-	mux.HandleFunc("POST /rooms", createRoom(store))
+	mux.HandleFunc("POST /api/v1/rooms", createRoom(store))
 }
 
 func createRoom(store service.RoomStore) http.HandlerFunc {

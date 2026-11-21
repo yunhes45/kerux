@@ -19,7 +19,7 @@ type roomItem struct {
 }
 
 func RegisterRoomList(mux *http.ServeMux, lister service.RoomLister) {
-	mux.HandleFunc("GET /rooms", listRooms(lister))
+	mux.HandleFunc("GET /api/v1/rooms", listRooms(lister))
 }
 
 func listRooms(lister service.RoomLister) http.HandlerFunc {
