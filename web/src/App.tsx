@@ -1,23 +1,31 @@
-import { useEffect, useState } from 'react'
-import { health } from './api'
-import { Button } from '@/components/ui/button'
+import { useState } from 'react'
+import { useAuth } from '@/auth/useAuth'
+import LoginPage from '@/pages/LoginPage'
+import RoomsPage from '@/pages/RoomsPage'
+import SignupPage from '@/pages/SignupPage'
 
-export default function App() {
-  const [status, setStatus] = useState('확인 중')
+type Screen = 'login' | 'signup'
 
-  useEffect(() => {
-    health()
-        .then(setStatus)
-        .catch(() => setStatus('서버에 연결할 수 없음'))
-  }, [])
+function App() {
+    const { memberId } = useAuth()
+    const [screen, setScreen] = useState<Screen>('login')
+    const [notice, setNotice] = useState('')
 
-    return (
-        <main className="flex h-full flex-col items-center justify-center gap-3">
-            <h1 className="text-2xl font-semibold tracking-tight">Kerux</h1>
-            <p className="rounded-md border bg-muted px-3 py-1 text-sm text-muted-foreground">
-                서버 응답: {status}
-            </p>
-            <Button>시작하기</Button>
-        </main>
-    )
+    if (memberId !== null) return <RoomsPage />
+
+    if (screen === 'signup') {
+        return (
+            <SignupPage
+                onLogin={() => setScreen('login')}
+                onDone={() => {
+                    setNotice('가입했어요. 로그인해 주세요')
+                    setScreen('login')
+                }}
+            />
+        )
+    }
+
+    return <LoginPage notice={notice} onSignup={() => setScreen('signup')} />
 }
+
+export default App
